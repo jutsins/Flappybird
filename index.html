@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flappybird</title>
+</head>
+<body onload="startGame()">
+<script>
+    var gameArea;
+    var flappy;
+    var ground;
+    var obstacle1;
+    var componentList = [];
+    var areaWidth = window.innerWidth;
+    var areaHeight = window.innerHeight / 2;
+
+    function startGame() {
+        gameArea.start();
+        obstacle1 = new squarecomponent(10, 30, "green", areaWidth, areaHeight - 40, true);
+        flappy = new squarecomponent(20, 20, "red", 20, areaHeight - 30);
+        ground = new squarecomponent(areaWidth, 10, "brown", 0, areaHeight - 10);
+
+        componentList = [flappy, ground, obstacle1];
+
+
+    }
+
+    gameArea = {
+        canvas: document.createElement("canvas"),
+        start: function () {
+            this.canvas.width = areaWidth;
+            this.canvas.height = areaHeight;
+            this.context = this.canvas.getContext("2d");
+            document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+            this.interval = setInterval(updateGameArea, 20);
+            this.listener = setInterval(jump, 1);
+        },
+        clear: function () {
+            this.context.clearRect(0, 0, areaWidth, areaHeight);
+        }
+    };
+
+
+    function jump() {
+        document.body.onkeydown = function (e) {
+            if (e.keyCode === 32) {
+                flappy.y -= 5;
+            }
+        }
+    }
+
+    function updateGameArea() {
+        gameArea.clear();
+
+        componentList.forEach(function (item) {
+            if (item.obstacle) {
+                item.x -= 1;
+            }
+            item.update();
+        })
+    }
+
+
+    var squarecomponent = (function (width, height, color, x, y, obstacle = false) {
+        this.width = width;
+        this.height = height;
+        this.color = color;
+        this.x = x;
+        this.y = y;
+        this.obstacle = obstacle
+
+        var update = function () {
+            ctx = gameArea.context;
+            ctx.fillStyle = color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        };
+
+        return {
+            update: update,
+            x: x, y: y, width: width, height: height, obstacle: obstacle
+
+        }
+    });
+
+
+</script>
+</body>
+</html>
