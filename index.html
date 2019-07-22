@@ -16,9 +16,9 @@
 
     function startGame() {
         gameArea.start();
-        obstacle1 = new squarecomponent(10, 30, "green", areaWidth, areaHeight - 40, true);
-        flappy = new squarecomponent(20, 20, "red", 20, areaHeight - 30);
-        ground = new squarecomponent(areaWidth, 10, "brown", 0, areaHeight - 10);
+        obstacle1 = new bird(10, 30, "green", areaWidth, areaHeight - 40, true);
+        flappy = new bird(20, 20, "red", 20, areaHeight - 30);
+        ground = new bird(areaWidth, 10, "brown", 0, areaHeight - 10);
 
         componentList = [flappy, ground, obstacle1];
 
@@ -34,6 +34,7 @@
             document.body.insertBefore(this.canvas, document.body.childNodes[0]);
             this.interval = setInterval(updateGameArea, 20);
             this.listener = setInterval(jump, 1);
+            this.gravity = setInterval(handleGravity, 20);
         },
         clear: function () {
             this.context.clearRect(0, 0, areaWidth, areaHeight);
@@ -44,9 +45,20 @@
     function jump() {
         document.body.onkeydown = function (e) {
             if (e.keyCode === 32) {
-                flappy.y -= 5;
+                flappy.velocity += 15;
             }
         }
+    }
+
+    function handleGravity() {
+        if (flappy.velocity != 0) {
+            flappy.y -= flappy.velocity;
+            flappy.velocity -= 1;
+        }
+    }
+
+    function handleCollision() {
+
     }
 
     function updateGameArea() {
@@ -61,13 +73,15 @@
     }
 
 
-    var squarecomponent = (function (width, height, color, x, y, obstacle = false) {
+    var bird = (function (width, height, color, x, y, obstacle = false, velocity = 0) {
         this.width = width;
         this.height = height;
         this.color = color;
         this.x = x;
         this.y = y;
-        this.obstacle = obstacle
+        this.obstacle = obstacle;
+        this.velocity = velocity;
+
 
         var update = function () {
             ctx = gameArea.context;
@@ -75,10 +89,17 @@
             ctx.fillRect(this.x, this.y, this.width, this.height);
         };
 
-        return {
-            update: update,
-            x: x, y: y, width: width, height: height, obstacle: obstacle
+        var onGround = function () {
+            if (this.y == areaHeight - 10 - this.height) {
+                return true;
+            } else {
+                return false;
+            }
+        }
 
+        return {
+            update: update, onGround: onGround,
+            x: x, y: y, width: width, height: height, obstacle: obstacle, velocity: velocity,
         }
     });
 
