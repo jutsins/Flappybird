@@ -11,13 +11,14 @@
     var ground;
     var obstacle1;
     var componentList = [];
-    var areaWidth = window.innerWidth;
+    var areaWidth = window.innerWidth-10;
     var areaHeight = window.innerHeight / 2;
+    var obstacleSpeed = 4;
 
     function startGame() {
         gameArea.start();
         obstacle1 = new bird(10, 30, "green", areaWidth, areaHeight - 40, true);
-        flappy = new bird(20, 20, "red", 20, areaHeight - 30);
+        flappy = new bird(20, 40, "red", 20, areaHeight - 50);
         ground = new bird(areaWidth, 10, "brown", 0, areaHeight - 10);
 
         componentList = [flappy, ground, obstacle1];
@@ -33,8 +34,10 @@
             this.context = this.canvas.getContext("2d");
             document.body.insertBefore(this.canvas, document.body.childNodes[0]);
             this.interval = setInterval(updateGameArea, 20);
-            this.listener = setInterval(jump, 1);
+            this.Listener = setInterval(jump, 2);
             this.gravity = setInterval(handleGravity, 20);
+            this.generateObstacle = setInterval(createObstacle, 1000);
+            this.increaseSpeed = setInterval(increaseObstacleSpeed, 1000)
         },
         clear: function () {
             this.context.clearRect(0, 0, areaWidth, areaHeight);
@@ -44,14 +47,55 @@
 
     function jump() {
         document.body.onkeydown = function (e) {
-            if (e.keyCode === 32) {
+            console.log(e.keyCode);
+            //jumps
+            if (e.keyCode === 32 && flappy.onGround()) {
                 flappy.velocity += 15;
             }
+
+            if (e.keyCode === 40 && flappy.onGround() && !flappy.isDucking) {
+                flappy.y += flappy.height / 2;
+                flappy.height = flappy.height / 2;
+                flappy.isDucking = true;
+            }
+        document.body.onkeyup = function (e) {
+            if (e.keyCode === 40 && flappy.isDucking) {
+                flappy.y -= flappy.height;
+                flappy.height = flappy.height * 2;
+                flappy.isDucking = false;
+            }
+        }
+
+
+        }
+    }
+
+    function increaseObstacleSpeed() {
+        obstacleSpeed += 0.2;
+    }
+
+    function createObstacle() {
+        var obstacle = new bird(10, 30, "green", areaWidth, areaHeight - 40, true);
+        var x = Math.random();
+        if (x < 0.30) {
+            componentList.push(obstacle)
         }
     }
 
     function handleGravity() {
-        if (flappy.velocity != 0) {
+        if (flappy.velocity > 0) {
+            flappy.y -= flappy.velocity;
+            flappy.velocity -= 1;
+        }
+        if (flappy.velocity === 0 && !flappy.onGround()) {
+            flappy.velocity -= 1;
+        }
+
+        if (flappy.onGround()) {
+            flappy.velocity = 0;
+        }
+
+        if (flappy.velocity < 0) {
             flappy.y -= flappy.velocity;
             flappy.velocity -= 1;
         }
@@ -63,17 +107,16 @@
 
     function updateGameArea() {
         gameArea.clear();
-
         componentList.forEach(function (item) {
             if (item.obstacle) {
-                item.x -= 4;
+                item.x -= obstacleSpeed;
             }
             item.update();
         })
     }
 
 
-    var bird = (function (width, height, color, x, y, obstacle = false, velocity = 0) {
+    var bird = (function (width, height, color, x, y, obstacle = false, velocity = 0, isDucking = false) {
         this.width = width;
         this.height = height;
         this.color = color;
@@ -81,6 +124,7 @@
         this.y = y;
         this.obstacle = obstacle;
         this.velocity = velocity;
+        this.isDucking = isDucking;
 
 
         var update = function () {
@@ -90,7 +134,7 @@
         };
 
         var onGround = function () {
-            if (this.y == areaHeight - 10 - this.height) {
+            if (this.y === areaHeight - 10 - this.height) {
                 return true;
             } else {
                 return false;
@@ -99,7 +143,7 @@
 
         return {
             update: update, onGround: onGround,
-            x: x, y: y, width: width, height: height, obstacle: obstacle, velocity: velocity,
+            x: x, y: y, width: width, height: height, obstacle: obstacle, velocity: velocity, isDucking,
         }
     });
 
