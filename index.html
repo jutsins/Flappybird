@@ -3,25 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <title>Flappybird</title>
+    <script src="src/area.js"></script>
+    <script src="src/obstacle.js"></script>
+    <script src="src/player.js"></script>
+    <script src="src/ground.js"></script>
+    <script src="src/score.js"></script>
 </head>
 <body onload="startGame()">
 <script>
     var gameArea;
     var flappy;
     var ground;
-    var obstacle1;
+    var scoreCounter;
     var componentList = [];
-    var areaWidth = window.innerWidth-10;
+    var areaWidth = window.innerWidth - 10;
     var areaHeight = window.innerHeight / 2;
     var obstacleSpeed = 4;
+    var obstacles = [];
+    var scoreAmount = 0;
+
 
     function startGame() {
         gameArea.start();
-        obstacle1 = new bird(10, 30, "green", areaWidth, areaHeight - 40, true);
         flappy = new bird(20, 40, "red", 20, areaHeight - 50);
-        ground = new bird(areaWidth, 10, "brown", 0, areaHeight - 10);
-
-        componentList = [flappy, ground, obstacle1];
+        ground = new ground(areaWidth, 10, "brown", 0, areaHeight - 10);
+        scoreCounter = new scoreDisplay(areaWidth- 30 * 7, 40, scoreAmount);
+        componentList = [flappy, ground, scoreCounter];
 
 
     }
@@ -37,7 +44,7 @@
             this.Listener = setInterval(jump, 2);
             this.gravity = setInterval(handleGravity, 20);
             this.generateObstacle = setInterval(createObstacle, 1000);
-            this.increaseSpeed = setInterval(increaseObstacleSpeed, 1000)
+            this.increaseSpeed = setInterval(increaseObstacleSpeed, 100)
         },
         clear: function () {
             this.context.clearRect(0, 0, areaWidth, areaHeight);
@@ -47,8 +54,6 @@
 
     function jump() {
         document.body.onkeydown = function (e) {
-            console.log(e.keyCode);
-            //jumps
             if (e.keyCode === 32 && flappy.onGround()) {
                 flappy.velocity += 15;
             }
@@ -58,27 +63,30 @@
                 flappy.height = flappy.height / 2;
                 flappy.isDucking = true;
             }
-        document.body.onkeyup = function (e) {
-            if (e.keyCode === 40 && flappy.isDucking) {
-                flappy.y -= flappy.height;
-                flappy.height = flappy.height * 2;
-                flappy.isDucking = false;
+            document.body.onkeyup = function (e) {
+                if (e.keyCode === 40 && flappy.isDucking) {
+                    flappy.y -= flappy.height;
+                    flappy.height = flappy.height * 2;
+                    flappy.isDucking = false;
+                }
             }
-        }
 
 
         }
     }
 
     function increaseObstacleSpeed() {
-        obstacleSpeed += 0.2;
+        obstacleSpeed += 0.02;
+        scoreAmount += Math.round(1 * obstacleSpeed);
+        scoreCounter = new scoreDisplay(areaWidth- 30 * 7, 40, scoreAmount);
+        componentList[2] = scoreCounter;
     }
 
     function createObstacle() {
-        var obstacle = new bird(10, 30, "green", areaWidth, areaHeight - 40, true);
+        var obstacle1 = new obstacle(10, 30, "green", areaWidth, areaHeight - 40);
         var x = Math.random();
         if (x < 0.30) {
-            componentList.push(obstacle)
+            obstacles.push(obstacle1)
         }
     }
 
@@ -107,45 +115,14 @@
 
     function updateGameArea() {
         gameArea.clear();
-        componentList.forEach(function (item) {
-            if (item.obstacle) {
-                item.x -= obstacleSpeed;
-            }
+        obstacles.forEach(function (item) {
+            item.x -= obstacleSpeed;
+            item.update()
+        });
+        componentList.forEach(function (item){
             item.update();
-        })
+        });
     }
-
-
-    var bird = (function (width, height, color, x, y, obstacle = false, velocity = 0, isDucking = false) {
-        this.width = width;
-        this.height = height;
-        this.color = color;
-        this.x = x;
-        this.y = y;
-        this.obstacle = obstacle;
-        this.velocity = velocity;
-        this.isDucking = isDucking;
-
-
-        var update = function () {
-            ctx = gameArea.context;
-            ctx.fillStyle = color;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
-        };
-
-        var onGround = function () {
-            if (this.y === areaHeight - 10 - this.height) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        return {
-            update: update, onGround: onGround,
-            x: x, y: y, width: width, height: height, obstacle: obstacle, velocity: velocity, isDucking,
-        }
-    });
 
 
 </script>
