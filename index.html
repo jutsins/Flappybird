@@ -21,13 +21,14 @@
     var obstacleSpeed = 4;
     var obstacles = [];
     var scoreAmount = 0;
-
+    var obstacleCreator;
 
     function startGame() {
         gameArea.start();
         flappy = new bird(20, 40, "red", 20, areaHeight - 50);
         ground = new ground(areaWidth, 10, "brown", 0, areaHeight - 10);
         scoreCounter = new scoreDisplay(areaWidth- 30 * 7, 40, scoreAmount);
+        obstacleCreator = new obstacleGenerator();
         componentList = [flappy, ground, scoreCounter];
 
 
@@ -83,10 +84,9 @@
     }
 
     function createObstacle() {
-        var obstacle1 = new obstacle(10, 30, "green", areaWidth, areaHeight - 40);
         var x = Math.random();
         if (x < 0.30) {
-            obstacles.push(obstacle1)
+            obstacleCreator.generate();
         }
     }
 
